@@ -1,19 +1,37 @@
-import { useContext } from "react"
-import Conversations from "./components/Conversations"
+import { useEffect } from "react"
+import ChatInput from "./components/ChatInput"
+import Chats from "./components/Conversations"
 import TextMessage from "./components/TextMessage"
 import UserCard from "./components/UserCard"
-import { UserContext } from "./context/UserContext"
-import ChatInput from "./components/ChatInput"
+import { Message } from "./interfaces/message.interface"
+import { chatStore } from "./store/example.store"
 
 function App() {
 
-  const { user, chatMessages } = useContext(UserContext)
+  const { chatMessages } = chatStore((state: any) => ({ chatMessages: state.chatMessages }))
+  const { chat } = chatStore((state: any) => ({ chat: state.chat }))
+  const { getChatMessages } = chatStore((state: any) => ({ getChatMessages: state.getChatMessages }))
+
+  const mensagens = (chatMessages as Message[]).sort((a, b) => a.timestamp - b.timestamp)
+
+  useEffect(() => {
+
+    let interval: any
+    if (chat.id) {
+      interval = setInterval(() => {
+        getChatMessages()
+      }, 700)
+    }
+
+    return () => clearInterval(interval)
+
+  }, [chat])
 
   return (
     <>
       <div className="flex h-screen antialiased text-gray-800">
         <div className="flex flex-row h-full w-full overflow-x-hidden">
-          <div className="flex flex-col py-8 pl-6 pr-2 w-64 bg-white flex-shrink-0">
+          <div className="flex flex-col py-8 pl-6 pr-2 w-96 bg-white flex-shrink-0">
             <div className="flex flex-row items-center justify-center h-12 w-full">
               <div
                 className="flex items-center justify-center rounded-2xl text-indigo-700 bg-indigo-100 h-10 w-10"
@@ -33,13 +51,12 @@ function App() {
                   ></path>
                 </svg>
               </div>
-              <div className="ml-2 font-bold text-2xl">App Zap</div>
+              <div className="ml-2 font-bold text-2xl">Whatsapp Developer</div>
             </div>
 
             {/* User box */}
             <UserCard />
-
-            <Conversations />
+            <Chats />
 
           </div>
           <div className="flex flex-col flex-auto h-full p-6">
@@ -53,27 +70,23 @@ function App() {
 
                     {/* Mensagem */}
                     {
-                      chatMessages.map((mensagem: { user: string; mensagem: string }) => {
-                        
-                        if (mensagem.mensagem.length == 0){
-                          return ;
-                        }
-                        return(<TextMessage username={mensagem.user} message={mensagem.mensagem} me={mensagem.user === user.usernumber} />)
-                        
+                      mensagens.map((mensagem: Message, index) => {
+                        return (<TextMessage mensagem={mensagem} key={index} />)
+
                       })
                     }
 
                     {/* Fim mensagem */}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Chat input */}
-            <ChatInput />
+              {/* Chat input */}
+              <ChatInput />
+            </div>
           </div>
         </div>
-      </div>
-    </div >
+      </div >
     </>
   )
 }

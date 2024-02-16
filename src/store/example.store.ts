@@ -7,10 +7,16 @@ import { create } from 'zustand'
 
 export const userStore = create((set) => ({
     user: {} as any,
-    contacts: {} as any,
+    contacts: [] as any,
     setUser: (user: any) => { set({ user }) },
     setContacts: (contacts: any) => set({ contacts }),
 }))
+
+export const chatListStore = create((set) => ({
+    chatList: [] as any,
+    setChatList: (chatList: any) => { set({ chatList }) },
+}))
+
 
 export const chatStore = create((set) => ({
     chats: [] as any,

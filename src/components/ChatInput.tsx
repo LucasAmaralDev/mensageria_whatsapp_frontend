@@ -1,12 +1,13 @@
 import React from 'react'
 import { chatStore } from '../store/example.store'
+import { socket } from '../socket'
 
 export default function ChatInput() {
 
   const [message, setMessage] = React.useState('')
 
 
-  const { chat, getChatMessages } = chatStore((state: any) => ({ chat: state.chat, getChatMessages: state.getChatMessages }))
+  const { chat } = chatStore((state: any) => ({ chat: state.chat, getChatMessages: state.getChatMessages }))
 
   const sendMessage = async () => {
     const response = await fetch(`http://localhost:3003/send`, {
@@ -21,7 +22,10 @@ export default function ChatInput() {
     })
 
     if (response.ok) {
-      getChatMessages()
+      setTimeout(() => {
+        socket.emit("getChats")
+        socket.emit("getChatMessages", chat.id._serialized)
+      }, 150)
     }
 
     setMessage('')

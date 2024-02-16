@@ -1,41 +1,19 @@
 import { useEffect } from "react"
-import { chatStore, userStore } from "../store/example.store"
+import { socket } from "../socket"
+import { chatListStore, chatStore } from "../store/example.store"
 import CardChat from "./CardChat"
 
 export default function Chats() {
 
-    const { chats, chat } = chatStore((state: any) => ({ chats: state.chats, setChat: state.setChat, chat: state.chat }))
-    const { getChatMessages } = chatStore((state: any) => ({ getChatMessages: state.getChatMessages }))
-    const { user } = userStore((state: any) => ({ user: state.user }))
-    const { getChats } = chatStore((state: any) => ({ chats: state.chats, setChats: state.setChats, getChats: state.getChats }))
-    const { contacts, setContacts } = userStore((state: any) => ({ contacts: state.contacts, setContacts: state.setContacts }))
+    const { chatList } = chatListStore((state: any) => ({ chatList: state.chatList, setChatList: state.setChatList }))
+
+    const { chat } = chatStore((state: any) => ({ chats: state.chats, setChat: state.setChat, chat: state.chat }))
 
 
-
-    const getContacts = async () => {
-        if (Object.keys(contacts).length > 0) return
-        const contactsData = {} as any
-        const response = await fetch("http://localhost:3003/getContacts")
-        const data = await response.json()
-
-        for (const contact of data) {
-            contactsData[`${contact.id._serialized}`] = contact.name
-        }
-        contactsData[`${user.me._serialized}`] = "eu"
-        setContacts(contactsData)
-
-    }
-
-    useEffect(() => {
-        if (user.me?._serialized) {
-            getChats()
-            getContacts()
-        }
-    }, [user])
 
     useEffect(() => {
         if (chat.id) {
-            getChatMessages()
+            socket.emit("getChatMessages", chat.id._serialized)
         }
     }, [chat])
 
@@ -50,7 +28,7 @@ export default function Chats() {
             <div className="flex flex-col space-y-1 mt-4 -mx-2 h-full overflow-y-auto">
 
                 {
-                    chats.map((chatUser: any, index: number) => {
+                    chatList.map((chatUser: any, index: number) => {
 
                         return (
                             <div key={index}>

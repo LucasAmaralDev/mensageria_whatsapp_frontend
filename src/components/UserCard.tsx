@@ -14,31 +14,25 @@ export default function UserCard() {
     }
 
     const getUserData = async () => {
-        if (user.me?._serialized) return
-        const response = await fetch("http://localhost:3003/me/info")
-        const data = await response.json()
-        console.log(data)
-        const urlImage = await getUrlImage(data.wid._serialized)
-        data.urlImage = urlImage
-        setUser(data)
+        if (user.wid?._serialized && user.urlImage) return
+        const urlImage = await getUrlImage(user.wid._serialized)
+        user.urlImage = urlImage
+        setUser(user)
         getChats()
     }
 
 
     useEffect(() => {
-        let interval: any
 
-        interval = setInterval(() => {
-            if (user.me?._serialized) getUserData()
-        }, 10000)
+        if (user.me?._serialized && !user.urlImage) {
+            setTimeout(() => {
+                getUserData()
+            }, 1000)
+        }
 
-        return () => clearInterval(interval)
+    }, [user])
 
-    }, [])
 
-    useEffect(() => {
-        getUserData()
-    }, [])
 
 
 

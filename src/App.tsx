@@ -4,28 +4,76 @@ import Chats from "./components/Conversations"
 import TextMessage from "./components/TextMessage"
 import UserCard from "./components/UserCard"
 import { Message } from "./interfaces/message.interface"
-import { chatStore } from "./store/example.store"
+import { chatListStore, chatStore, userStore } from "./store/example.store"
+import { socket } from "./socket"
+
+export const socket_commands = {
+  getMyInfo: "getMyInfo",
+  getChats: "getChats",
+  getContacts: "getContacts",
+}
 
 function App() {
 
-  const { chatMessages } = chatStore((state: any) => ({ chatMessages: state.chatMessages }))
+  const { setUser } = userStore((state: any) => ({ setUser: state.setUser }))
+  const { setContacts } = userStore((state: any) => ({ setContacts: state.setContacts }))
+  const { setChatList } = chatListStore((state: any) => ({ setChatList: state.setChatList }))
+  const { setChatMessages } = chatStore((state: any) => ({ setChatMessages: state.setChatMessages }))
   const { chat } = chatStore((state: any) => ({ chat: state.chat }))
-  const { getChatMessages } = chatStore((state: any) => ({ getChatMessages: state.getChatMessages }))
+
+
+  useEffect(() => {
+    socket.emit(socket_commands.getMyInfo)
+    socket.emit(socket_commands.getChats)
+    socket.emit(socket_commands.getContacts)
+
+    socket.on("getMyInfo", (data: any) => {
+      setUser(data)
+    })
+
+    socket.on("getContacts", (data: any) => {
+      setContacts(data)
+      console.log("setando contatos")
+    })
+
+    socket.on("getChats", (data: any) => {
+      if (chat.id && chat.id._serialized === data.id._serialized) {
+        socket.emit("getChatMessages", data.id._serialized)
+      }
+      setChatList(data)
+    })
+
+    socket.on("getChatMessages", (data: any) => {
+      setChatMessages(data)
+    })
+
+  }, [])
+
+
+
+
+
+
+  const { chatMessages } = chatStore((state: any) => ({ chatMessages: state.chatMessages }))
+
 
   const mensagens = (chatMessages as Message[]).sort((a, b) => a.timestamp - b.timestamp)
 
-  useEffect(() => {
+  // const { getChatMessages } = chatStore((state: any) => ({ getChatMessages: state.getChatMessages }))
+  // useEffect(() => {
 
-    let interval: any
-    if (chat.id) {
-      interval = setInterval(() => {
-        getChatMessages()
-      }, 700)
-    }
+  //   let interval: any
+  //   if (chat.id) {
+  //     interval = setInterval(() => {
+  //       getChatMessages()
+  //     }, 700)
+  //   }
 
-    return () => clearInterval(interval)
+  //   return () => clearInterval(interval)
 
-  }, [chat])
+  // }, [chat])
+
+
 
   return (
     <>
@@ -71,7 +119,7 @@ function App() {
                     {/* Mensagem */}
                     {
                       mensagens.map((mensagem: Message, index) => {
-                        return (<TextMessage mensagem={mensagem} key={index} />)
+                        return (<TextMessage mensagem={mensagem} key={mensagem.id?._serialized} />)
 
                       })
                     }

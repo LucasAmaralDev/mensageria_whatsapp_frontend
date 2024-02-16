@@ -1,20 +1,25 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { chatStore, userStore } from '../store/example.store'
 
-export default function CardChat({ index, chatUser }: any) {
+export default function CardChat({ chatUser, index }: any) {
 
     if (!chatUser.id) return
+
+    if (!chatUser.lastMessage) return
 
 
     const [imagemUrl, setImagemUrl] = React.useState("")
     const { setChat } = chatStore((state: any) => ({ chats: state.chats, setChat: state.setChat, chat: state.chat }))
     const { contacts } = userStore((state: any) => ({ contacts: state.contacts, setContacts: state.setContacts }))
     const horarioUltimaMensagem = new Date(chatUser.lastMessage.timestamp * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+    const autorLastMessage = chatUser.lastMessage?.author ? chatUser.lastMessage.author : chatUser.lastMessage?.from ? chatUser.lastMessage.from : "aaaaa"
+    const username = typeof contacts === "object" && contacts.find((contact: any) => contact.id._serialized === autorLastMessage)?.name || "Desconhecido"
 
-    const autorLastMessage = chatUser.lastMessage.author ? chatUser.lastMessage.author : chatUser.lastMessage.from
-    const username = contacts[autorLastMessage] ? contacts[autorLastMessage] : autorLastMessage
 
 
+    useEffect(() => {
+        console.log("contacts atualizado", contacts)
+    }, [contacts])
 
     const getUrlImage = async (id: string) => {
         const response = await fetch(`http://localhost:3003/profilePhoto/${id}`)
@@ -25,10 +30,10 @@ export default function CardChat({ index, chatUser }: any) {
     React.useEffect(() => {
         getUrlImage(chatUser.id._serialized).then((url: any) => {
             setImagemUrl(url)
-        })
+        }).catch((err) => { })
     }, [])
 
-    return <div>
+    return <div key={chatUser.id._serialized}>
         <button
             key={index}
             className="flex flex-row items-center hover:bg-gray-100 rounded-xl p-2 w-full"
@@ -46,6 +51,7 @@ export default function CardChat({ index, chatUser }: any) {
                             src={imagemUrl}
                             alt="Avatar"
                             className="h-full w-full rounded-full"
+                            key={chatUser.id._serialized}
                         />
                         : <div
                             className="h-10 w-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-semibold"

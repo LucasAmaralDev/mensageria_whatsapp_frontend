@@ -1,13 +1,15 @@
 import { Message } from "../interfaces/message.interface"
 import { userStore } from "../store/example.store"
+import AudioMessage from "./AudioMessage"
 import ImageMessage from "./ImageMessage"
+import VideoMessage from "./VideoMessage"
 
 export default function TextMessage({ mensagem }: { mensagem: Message }) {
 
 
     const { contacts, user } = userStore((state: any) => ({ contacts: state.contacts, user: state.user }))
     const userSerialized = mensagem.author ? mensagem.author : mensagem.from
-    const userName = contacts[userSerialized] ? contacts[userSerialized] : userSerialized
+    const userName = typeof contacts === "object" && contacts.find((contact: any) => contact.id._serialized === userSerialized)?.name
     const me = mensagem.fromMe
 
 
@@ -26,6 +28,15 @@ export default function TextMessage({ mensagem }: { mensagem: Message }) {
                             {
                                 mensagem.type === "image" &&
                                 <ImageMessage mensagem={mensagem} />
+                            }
+                            {
+                                mensagem.type === "ptt" &&
+                                <AudioMessage mensagem={mensagem} />
+
+                            }
+                            {
+                                mensagem.type === "video" &&
+                                <VideoMessage mensagem={mensagem} />
                             }
                         </div>
                         <div>{mensagem.body}</div>
@@ -59,11 +70,25 @@ export default function TextMessage({ mensagem }: { mensagem: Message }) {
                 >
                     <span className="text-xs font-bold text-indigo-500 absolute -top-5 left-2 text-nowrap"
                     >{userName}</span>
-                    <div>{
-                        mensagem.body.length > 0
-                            ? mensagem.body
-                            : mensagem.type === "image" ? "imagem" : mensagem.type === "ptt" ? "audio" : mensagem.type === "video" ? "video" : mensagem.type === "sticker" ? "(Figurinha #AbraNoCelular)" : mensagem.type === "document" ? "documento" : mensagem.type === "location" ? "localização" : mensagem.type === "vcard" ? "contato" : mensagem.type === "chat" ? "chat" : mensagem.type === "revoked" ? "mensagem apagada" : "mensagem"
-                    }</div>
+                    <div>
+                        {
+                            mensagem.type === "image" &&
+                            <ImageMessage mensagem={mensagem} />
+                        }
+                        {
+                            mensagem.type === "ptt" &&
+                            <AudioMessage mensagem={mensagem} />
+
+                        }
+                        {
+                            mensagem.type === "video" &&
+                            <VideoMessage mensagem={mensagem} />
+                        }
+                        {
+                            mensagem.body.length > 0
+                            && mensagem.body
+                        }
+                    </div>
                     <button
                         onClick={() => console.log(mensagem)}
                         className="text-xs font-bold text-indigo-500"
@@ -81,6 +106,7 @@ export default function TextMessage({ mensagem }: { mensagem: Message }) {
                             }}
                         >Baixar Objeto como JSON</button>
                     }
+
                 </div>
             </div>
         </div>
